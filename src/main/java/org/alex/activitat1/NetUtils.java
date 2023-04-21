@@ -1,10 +1,12 @@
 package org.alex.activitat1;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.util.Date;
 
 public class NetUtils {
 
@@ -49,29 +51,35 @@ public class NetUtils {
       System.out.println(urlStr);
       try {
         URL url = new URL(urlStr);
-        URLConnection conn = url.openConnection();
-        conn.connect();
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
 
-        String[] headerFieldNames = {
-            "responseCode",
-            "responseMessage",
-            "contentType",
-            "contentEncoding",
-            "contentLength",
-            "date",
-            "expiration",
-            "lastModified"
-        };
+        System.out.println("httpURLConnection.getResponseCode() = " + conn.getResponseCode());
+        System.out.println("httpURLConnection.getResponseMessage() = " + conn.getResponseMessage());
+        System.out.println("httpURLConnection.getContentType() = " + conn.getContentType());
+        System.out.println("httpURLConnection.getContentEncoding() = " + conn.getContentEncoding());
+        System.out.println("httpURLConnection.getContentLength() = " + conn.getContentLength());
 
-        for (String headerFieldName : headerFieldNames) {
-          System.out.println(headerFieldName + " = " + conn.getHeaderField(headerFieldName));
+        long date = conn.getDate();
+        if (date != 0) {
+          System.out.println("httpURLConnection.getDate() = " + new Date(date));
         }
+
+        long expiration = conn.getExpiration();
+        if (expiration != 0) {
+          System.out.println("httpURLConnection.getExpiration() = " + new Date(expiration));
+        }
+
+        long lastModified = conn.getLastModified();
+        if (lastModified != 0) {
+          System.out.println("httpURLConnection.getLastModified() = " + new Date(lastModified));
+        }
+
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
       System.out.println();
     }
-
   }
 
   public static void mostrarHeaderGesstypePerUrl(String[] urls) {
