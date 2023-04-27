@@ -5,11 +5,19 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class ClientChat {
 
+  // adreça IP del servidor
+  private static final String SERVER_IP = "localhost";
+  private static final int SERVER_PORT = 5601;
+  private static final String EXIT_MSG = "Sortir";
   final String HOST = "127.0.0.1";
   private int puerto;
+  private String nomClient;
+  private boolean teNomClient;
 
   public ClientChat(int puerto) {
     this.puerto = puerto;
@@ -20,36 +28,57 @@ public class ClientChat {
     clientChat.escriureChat();
   }
 
+  public int getPuerto() {
+    return puerto;
+  }
+
+  public void setPuerto(int puerto) {
+    this.puerto = puerto;
+  }
+
+  public String getNomUser() {
+    return nomClient;
+  }
+
+  public void setNomUser(String nomUser) {
+    this.nomClient = nomUser;
+  }
+
   public void escriureChat() {
-    String serverIP = "localhost"; // adreça IP del servidor
-    int serverPort = 5601; // port del servidor
-    String exitMsg = "Sortir"; // missatge de sortida del bucle
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    LocalDateTime localDateTime = LocalDateTime.now();
 
-    try {
-      // creem el socket del client i ens connectem al servidor
-      Socket socket = new Socket(serverIP, serverPort);
-      System.out.println("Connectat al servidor " + socket.getInetAddress());
+    try (Socket socket = new Socket(SERVER_IP, SERVER_PORT)) {
 
-      // creem un BufferedReader per llegir les dades de la consola
+      System.out.println("Connectat a ServidorChat: " + dateTimeFormatter.format(localDateTime));
+
+      System.out.println("IP del ServidorChat: " + socket.getInetAddress());
+      System.out.println("Introdueix el nom d'usuari");
+
+      teNomClient = false;
+
       BufferedReader consoleIn = new BufferedReader(new InputStreamReader(System.in));
 
-      // creem un PrintWriter per enviar dades al servidor
-      PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+      PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
 
-      // llegim linies de la consola fins que introduïm el missatge de sortida
-      String line;
-      while ((line = consoleIn.readLine()) != null) {
-        out.println(line);
-        if (line.equals(exitMsg)) {
+      String missatgeClient;
+      while ((missatgeClient = consoleIn.readLine()) != null) {
+        if (!teNomClient) {
+          printWriter.println(missatgeClient);
+          teNomClient = true;
+          System.out.printf("Benvingut al chat %s%n", missatgeClient);
+        }
+        printWriter.println(missatgeClient);
+        if (missatgeClient.equals(EXIT_MSG)) {
           break;
         }
       }
 
-      // tanquem la connexió amb el servidor
-      socket.close();
-      System.out.println("Connexió amb el servidor tancada");
+      System.out.println("Connexió amb el chat tancada");
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
+
+
 }

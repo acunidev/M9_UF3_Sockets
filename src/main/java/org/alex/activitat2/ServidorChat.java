@@ -8,8 +8,17 @@ import java.net.Socket;
 
 public class ServidorChat {
 
-  protected static final int PORT_DEFAULT = 5601;
+  static final int PORT_DEFAULT = 5601;
+  private static final String EXIT_MSG = "Sortir";
+  private boolean serverIniciat;
   private int puerto;
+  private String nomClient;
+  private boolean teNomClient;
+
+  public ServidorChat(int puerto, String nomClient) {
+    this.puerto = puerto;
+    this.nomClient = nomClient;
+  }
 
   public ServidorChat(int puerto) {
     this.puerto = puerto;
@@ -21,38 +30,43 @@ public class ServidorChat {
   }
 
   public void llegirChat() {
-    int port = 5601; // port d'escolta del servidor
-    String exitMsg = "Sortir"; // missatge de sortida del bucle
 
-    try {
-      // creem el ServerSocket per escoltar pel port especificat
-      ServerSocket serverSocket = new ServerSocket(port);
-      System.out.println("Servidor escoltant pel port " + port);
+    try (ServerSocket serverSocket = new ServerSocket(ServidorChat.PORT_DEFAULT)) {
+      System.out.println("Servidor escoltant pel port " + ServidorChat.PORT_DEFAULT);
 
       while (true) {
-        // esperem a que un client es connecti
-        Socket clientSocket = serverSocket.accept();
-        System.out.println("Client connectat des de l'adreça " + clientSocket.getInetAddress());
+        Socket clientChatSocket = serverSocket.accept();
+        serverIniciat = true;
+        teNomClient = false;
+        System.out.println("Client connectat des de l'adreça " + clientChatSocket.getInetAddress());
 
-        // creem un BufferedReader per llegir les dades enviades pel client
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientChatSocket.getInputStream()));
 
-        // llegim linies fins que rebem el missatge de sortida
-        String line;
-        while ((line = in.readLine()) != null) {
-          System.out.println("Client diu: " + line);
-          if (line.equals(exitMsg)) {
+        String missatgeClient = bufferedReader.readLine();
+        while ((missatgeClient = bufferedReader.readLine()) != null) {
+          if (!teNomClient) {
+            nomClient = missatgeClient;
+            teNomClient = true;
+            continue;
+          }
+          System.out.printf("%s: %s%n", nomClient, missatgeClient);
+          if (missatgeClient.equals(EXIT_MSG)) {
             break;
           }
         }
+        if (!serverIniciat) {
+          break;
+        }
 
-        // tanquem la connexió amb el client
-        clientSocket.close();
+        System.out.printf("Chat amb %s tancat%n :(", nomClient);
         System.out.println("Connexió amb el client tancada");
+        break;
+
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
+
   }
 }
 
